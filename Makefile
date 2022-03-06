@@ -10,8 +10,13 @@ build:
 test:
 	$(GO) test -coverprofile cover.out -v ./...
 
-run: build outdir
-	./${BINARY_NAME}
+cover: test
+	$(GO) tool cover -html=cover.out
+
+run: run-naive
+
+run-naive: build
+	./${BINARY_NAME} -implementation naive -max 1
  
 clean:
 	go clean

@@ -2,52 +2,44 @@ package main
 
 import (
 	_ "embed"
+	"flag"
+	"fmt"
 	"strings"
+
+	"github.com/thekorn/wordle-solver-go/internal/data"
+	"github.com/thekorn/wordle-solver-go/internal/game"
+	"github.com/thekorn/wordle-solver-go/internal/guesser"
 )
 
-//go:embed data/answers.txt
-var GAMES []byte
+func play[G guesser.Guesser](guesser G, max int) {
 
-func play[G any](answer string, guesser G) {
-	// play six round where it invokes the guesser each round
-}
+	w := game.MakeWordle()
+	fmt.Printf("game: %s", w)
 
-type Correctness int
-
-const (
-	// Green
-	Correct = iota
-	// Yellow
-	Misplaces
-	// Gray
-	Wrong
-)
-
-type Guess struct {
-	Word string
-	Mask [5]Correctness
-}
-
-type Guesser interface {
-	Guess(history []Guess) string
-}
-
-type NaiveGuesser struct{}
-
-func (n *NaiveGuesser) Guess(history []Guess) string {
-	return ""
-}
-
-func MakeNaiveGuesser() NaiveGuesser {
-	return NaiveGuesser{}
-}
-
-func main() {
-	guesser := MakeNaiveGuesser()
-	for _, answer := range strings.Split(string(GAMES), "\n") {
+	for _, answer := range strings.Split(string(data.GAMES), "\n")[0:max] {
 		if answer == "" {
 			continue
 		}
-		play(answer, guesser)
+		//w.play(answer, guesser)
 	}
+}
+
+func initImplementation(s string, max int) guesser.Guesser {
+	if s == "naive" {
+		return guesser.MakeNaiveGuesser()
+	} else {
+		panic(fmt.Sprintf("no implementation found for %s", s))
+	}
+}
+
+func main() {
+
+	implementationPtr := flag.String("implementation", "naive", "implementation to use")
+	maxPtr := flag.Int("max", 1, "number of games to run")
+
+	flag.Parse()
+
+	guesser := initImplementation(*implementationPtr, *maxPtr)
+
+	play(guesser, *maxPtr)
 }
